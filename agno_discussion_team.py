@@ -10,14 +10,18 @@ SESSION_ID = "session_1"
 SESSION_DB_FILE = "tmp/agents.db"
 SESSION_TABLE_NAME = "agent"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+DEBUG_MODE = False
+DEBUG_TOOL_CALLS = False
 
 # Initialize storage
 storage = SqliteStorage(table_name=SESSION_TABLE_NAME, db_file=SESSION_DB_FILE)
-storage.delete_session(SESSION_ID) # Delete previous session if it exists
+if storage.table_exists():
+    storage.delete_session(SESSION_ID) # Delete previous session if it exists
 
 # Define Linux Expert
 linux_expert = Agent(
     name="Linux Expert",
+    agent_id="linux_expert",
     model=OpenAIChat(id=MODEL_ID, api_key=OPENAI_API_KEY),
     role="Argue for why Linux is the best platform for machine learning.",
     add_name_to_instructions=True,
@@ -26,14 +30,12 @@ linux_expert = Agent(
         "When asked about platforms, advocate strongly for why Linux is the best platform for machine learning.",
         "Keep your response brief and organize your arguments into clear bullet points.",
     ],
-    storage=storage,
-    user_id=USER_ID,
-    session_id=SESSION_ID,
 )
 
 # Define Mac Expert
 mac_expert = Agent(
     name="Mac Expert",
+    agent_id="mac_expert",
     model=OpenAIChat(id=MODEL_ID, api_key=OPENAI_API_KEY),
     role="Argue for why Mac is the best platform for machine learning.",
     add_name_to_instructions=True,
@@ -42,14 +44,12 @@ mac_expert = Agent(
         "When asked about platforms, advocate strongly for why Mac is the best platform for machine learning.",
         "Keep your response brief and organize your arguments into clear bullet points.",
     ],
-    storage=storage,
-    user_id=USER_ID,
-    session_id=SESSION_ID,
 )
 
 # Define Windows Expert
 windows_expert = Agent(
     name="Windows Expert",
+    agent_id="windows_expert",
     model=OpenAIChat(id=MODEL_ID, api_key=OPENAI_API_KEY),
     role="Argue for why Windows is the best platform for machine learning.",
     add_name_to_instructions=True,
@@ -58,14 +58,12 @@ windows_expert = Agent(
         "When asked about platforms, advocate strongly for why Windows is the best platform for machine learning.",
         "Keep your response brief and organize your arguments into clear bullet points.",
     ],
-    storage=storage,
-    user_id=USER_ID,
-    session_id=SESSION_ID,
 )
 
 # Define Cloud Services Expert
 cloud_expert = Agent(
     name="Cloud Services Expert",
+    agent_id="cloud_expert",
     model=OpenAIChat(id=MODEL_ID, api_key=OPENAI_API_KEY),
     role="Argue for why Cloud Services are the best platform for machine learning.",
     add_name_to_instructions=True,
@@ -74,16 +72,17 @@ cloud_expert = Agent(
         "When asked about platforms, advocate strongly for why Cloud Services are the best platform for machine learning.",
         "Keep your response brief and organize your arguments into clear bullet points.",
     ],
-    storage=storage,
-    user_id=USER_ID,
-    session_id=SESSION_ID,
 )
 
 # Define Collaborative Team and Team Leader Agent
 collaborate_team = Team(
     name="Collaborative Team",
+    team_id="collaborate_team",
+    user_id=USER_ID,
+    session_id=SESSION_ID,
     mode="collaborate",
     model=OpenAIChat(id=MODEL_ID, api_key=OPENAI_API_KEY),
+    storage=storage,
     members=[
         linux_expert,
         mac_expert,
@@ -94,22 +93,22 @@ collaborate_team = Team(
         "You are a discussion master.",
         "You have to stop the discussion when everyone has had a fair chance to argue their perspective.",
     ],
-    success_criteria="The team has made their points.",
-    enable_agentic_context=True,
-    show_tool_calls=True,
+    success_criteria="Each member of the team has had a fair chance to argue their perspective.",
     markdown=True,
-    debug_mode=True,
+    debug_mode=DEBUG_MODE,
+    show_tool_calls=DEBUG_TOOL_CALLS,
     show_members_responses=True,
-    storage=storage,
-    user_id=USER_ID,
-    session_id=SESSION_ID,
 )
 
 # Define Route Team and Team Leader Agent
 route_team = Team(
     name="Route Team",
+    team_id="route_team",
+    user_id=USER_ID,
+    session_id=SESSION_ID,
     mode="route",
     model=OpenAIChat(id=MODEL_ID, api_key=OPENAI_API_KEY),
+    storage=storage,
     members=[
         linux_expert,
         mac_expert,
@@ -120,14 +119,10 @@ route_team = Team(
         "You are the leader of a team of experts on Machine Learning Platforms.",
         "Analyze the user's request and route it to the most appropriate expert.",
     ],
-    enable_agentic_context=True,
-    show_tool_calls=True,
     markdown=True,
-    debug_mode=True,
+    debug_mode=DEBUG_MODE,
+    show_tool_calls=DEBUG_TOOL_CALLS,
     show_members_responses=True,
-    storage=storage,
-    user_id=USER_ID,
-    session_id=SESSION_ID,
 )
 
 if __name__ == "__main__":
